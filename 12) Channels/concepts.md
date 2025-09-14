@@ -103,3 +103,39 @@ ch := make(chan int, 100)
 ```
 
 A buffer allows the channel to hold a fixed number of values before sending blocks. This mean sending on a buffered channel only blocks, when the buffer is full and receiving, blocks only when the buffer is empty.
+
+### Closing channels in Go
+Channels can be explicitly closed by a sender.
+```
+ch := make(chan int)
+
+// do some stuff with the channel
+
+// close the channel
+close(ch)
+```
+
+#### Checking if a channel is closed
+Similar to the `ok` value when accessing data in a map, receivers can check the `ok` value when receiving from a channel to test if a channel was closed.
+```
+v, ok := <-ch
+``` 
+
+`ok` is `false` if the channel is empty and closed.
+
+#### Don't send on a closed channel
+
+Sending on a closed channel causes panic. A panic on the main goroutine will cause the entire program to crash and a panic in any other goroutine will cause that goroutine to crash.
+
+Closing isn't necessary. There's nothing wrong with leaving channels open, they'll still be garbage collected if they're unused. We should close the channels to indicate explicitly to a receiver that nothing else is going to come across.
+
+### Iterating over a channel
+#### Range
+
+Similar to slices and maps, channels can also be ranged over like this:
+```
+for item := range ch {
+    // Item is the next value received from the channel
+}
+```
+This example will receive values over the channel (Blocking at each iteration if nothing new is there) and `will exit only when the channel is closed`.
