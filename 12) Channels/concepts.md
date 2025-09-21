@@ -154,3 +154,102 @@ case s, ok := <- chStrings:
 ```
 
 The first channel with a value ready to be received will fire and its body will be execute. If multiple channels are ready at the same time, one is chosen randomly. The ok variable in the example above refers to whether or not the channel has been closed by the sender yet.
+
+#### Default in Select in Channels
+The `default` case in a select statement executes immediately if no other channel has a value already. A `default` case stops the select statement from blocking.
+
+```
+select {
+case v := <-ch:
+	// use v
+default:
+	// receiving from ch would block
+	// so do something else
+}
+```
+
+#### Aside - Tickers 
+
+> **[time.Tick()](https://golang.org/pkg/time/#Tick)** - Standard library function that returns a channel that sends a value on a given interval.
+
+> **[time.After()](https://golang.org/pkg/time/#After)** - Sends a value once after the duration has passed.
+
+> **[time.Sleep()](https://golang.org/pkg/time/#Sleep)** - Blocks the current goroutine for the specified duration of time.
+
+These functions take **[time.Duration](https://pkg.go.dev/time#Duration)** as an argument. For example:
+```
+	time.Tick(500 * time.Millisecond)
+```
+If we don't add 'time.Millisecond'(or another unit), it will default to nanoseconds. That's faster than we would want it to be.
+
+### Read-Only Channels
+A channel can be marked as read-only by casting it from a chan to a `<-chan` type. For example:
+```
+func main() {
+	ch := make(chan int)
+	readCh(ch)
+}
+
+func readCh(ch <-chan int) {
+	// ch can only be read from in this function
+}
+```
+
+### Write-only Channels
+The same goes for write-only channels, but the arrow's position moves.
+
+```
+func writeCh(ch chan<- int) {
+	// ch can only be written to in this function
+}
+```
+
+### Channels Review
+
+#### Extra Things about channels from [Dave Cheney's article](https://dave.cheney.net/2014/03/19/channel-axioms)
+
+- **A Declared but `uninitialized` channel is `Nil` just like a slice**
+```
+// s is nil
+var s []int
+
+// c is nill
+var c chan string 
+
+// s is initialized and not nil
+// c in initialized and not nil
+var s = make([]int, 5)
+var c = make(chan int)
+```
+
+- **A send to a `Nil` channel blocks forever**
+```
+// c is nil
+var c chan string
+
+c <- "let's get started"
+// blocks forever
+```
+
+- **A receive from a `Nil` channel blocks**
+```
+// c is nil
+var c chan string
+fmt.Println(<-c) // blocks
+```
+
+- **A send to a `closed` channel panics**
+```
+var c = make(chan int, 100)
+close(c)
+c <- 1 // panic: send on a closed channel
+```
+
+- **A `receive` from a `closed` channel returns the `zero value immediately`**
+```
+var c = make(chan int, 100)
+close(c)
+fmt.Println(<-c) // Prints 0
+```
+
+> **`Note`: If a program exits before its goroutines have completed, those goroutines will be killed silently.**
