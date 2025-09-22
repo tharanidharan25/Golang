@@ -20,3 +20,5 @@ Mutexes are powerful. Like most powerful things, they can also cause many bugs i
 
 ### Maps are not [thread-safe](https://en.wikipedia.org/wiki/Thread_safety)
 Maps are `not` thread-safe for concurrent use. If we have multiple goroutines accessing the same map, and at least one of them is writing to the map, we must [lock](https://en.wikipedia.org/wiki/Readers%E2%80%93writer_lock) the maps with a mutex.
+
+
